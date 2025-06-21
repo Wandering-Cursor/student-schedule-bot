@@ -10,6 +10,6 @@ RUN uv sync --frozen
 
 ADD . /app
 
-WORKDIR /app/student_schedule
+WORKDIR /app/student_schedule_bot
 
-ENTRYPOINT [ "uv", "run", "bot" ]
+ENTRYPOINT [ "uv", "run", "bot.py" ]
