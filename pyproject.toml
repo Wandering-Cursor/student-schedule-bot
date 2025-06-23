@@ -65,6 +65,7 @@ ignore = [
   "FBT001",
   "FBT002",
 ]
+fixable = ["ALL"]
 
 [tool.ruff.format]
 quote-style = "double"

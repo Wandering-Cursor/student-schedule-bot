@@ -10,7 +10,6 @@
             "extensions": [
                 "streetsidesoftware.code-spell-checker",
                 "phil294.git-log--graph",
-                "ms-python.isort",
                 "ms-python.python",
                 "ms-python.vscode-pylance",
                 "ms-python.debugpy",
@@ -24,7 +23,7 @@
                     "editor.formatOnSave": true,
                     "editor.defaultFormatter": "charliermarsh.ruff",
                     "editor.codeActionsOnSave": {
-                        "source.organizeImports": "explicit"
+                        "source.organizeImports.ruff": "always"
                     }
                 }
             }
