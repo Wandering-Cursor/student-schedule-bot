@@ -153,8 +153,13 @@ class RequestSender:
         request_method: Literal["async", "sync"] = "async",
     ) -> dict:
         """Returns default headers to use for the requests"""
+        try:
+            version = metadata.version(__package__)
+        except metadata.PackageNotFoundError:
+            version = "unknown"
+
         return {
-            "User-Agent": f"{__package__}/{metadata.version(__package__)}",
+            "User-Agent": f"{__package__}/{version}",
             "X-Service-Name": service_name,
             "X-Request-Method": request_method,
         }

@@ -2,7 +2,7 @@ import datetime
 
 import pydantic
 
-from student_schedule_bot.bot.schemas.base import Schema
+from bot.schemas.base import Schema
 
 
 class NavigatableObject(Schema):

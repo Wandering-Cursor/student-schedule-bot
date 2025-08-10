@@ -8,6 +8,7 @@ class ApplicationStates(StrEnum):
 
 class Commands(StrEnum):
     SHOW_SCHEDULE = "show_schedule"
+    SHOW_MAIN_MENU = "show_main_menu"
 
     @property
     def as_command(self) -> str:

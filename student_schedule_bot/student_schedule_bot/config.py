@@ -30,7 +30,7 @@ class Config(BaseSettings):
     TIMEZONE: str = "UTC"
     LANGUAGE_CODE: str = "en-us"
 
-    SCHEDULE_URL: pydantic.HttpUrl = "http://docker.host:8000/api/schedule"
+    SCHEDULE_URL: pydantic.HttpUrl = "http://student-schedule-backend-1:8000/api"
 
     model_config = SettingsConfigDict(
         env_file=(
@@ -38,6 +38,8 @@ class Config(BaseSettings):
             "/run/secrets/env_file",
         ),
         extra="ignore",
+        validate_assignment=True,
+        validate_default=True,
     )
 
 

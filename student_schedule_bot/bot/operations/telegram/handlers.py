@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 from bot.models.telegram.chat import TelegramChat
 from bot.models.user import User
+from bot.operations.schedule.read import get_schedule
 from bot.operations.telegram import messages
 from bot.operations.telegram.decorators import handler_decorator
 from student_schedule_bot.logger import main_logger
@@ -102,7 +103,12 @@ async def show_schedule(
 ) -> None:
     user = await get_user(update)
 
+    schedule = await get_schedule(
+        user=user,
+    )
+
     await messages.show_schedule(
         update=update,
         user=user,
+        schedule=schedule,
     )

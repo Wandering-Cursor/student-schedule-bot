@@ -37,6 +37,13 @@ async def get_bot(bot_instance: "BotModel") -> "Application":
 
     application.add_handler(
         CallbackQueryHandler(
+            handlers.start,
+            pattern=Commands.SHOW_MAIN_MENU.as_regex,
+        )
+    )
+
+    application.add_handler(
+        CallbackQueryHandler(
             handlers.show_schedule,
             pattern=Commands.SHOW_SCHEDULE.as_regex,
         )

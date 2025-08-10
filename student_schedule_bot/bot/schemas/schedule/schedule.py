@@ -3,7 +3,7 @@ import datetime
 import pydantic
 
 from bot.schemas.base import Schema
-from student_schedule_bot.bot.schemas.schedule.base import NavigatableObject, WithTimestamps
+from bot.schemas.schedule.base import NavigatableObject, WithTimestamps
 
 
 class ScheduleFilters(Schema):
