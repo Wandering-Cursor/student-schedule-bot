@@ -107,6 +107,14 @@ AUTH_PASSWORD_VALIDATORS = [
 AUTH_USER_MODEL = "bot.User"
 
 
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "schedules",
+    }
+}
+
+
 def message_to_json(message: dict) -> str:
     """Convert a message dictionary to a JSON string."""
     import json  # noqa: PLC0415
@@ -123,7 +131,7 @@ class CustomJsonFormatter(logging.Formatter):
         # If the message is not a JSON object, wrap it in one
         if isinstance(record.msg, dict):
             record.msg = message_to_json(record.msg)
-        elif not record.msg.startswith("{"):
+        elif isinstance(record.msg, str) and not record.msg.startswith("{"):
             record.msg = message_to_json({"msg": record.msg})
         return super().format(record)
 

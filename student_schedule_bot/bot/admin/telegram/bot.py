@@ -22,9 +22,15 @@ class TelegramBotAdmin(BaseAdmin):
                     "name",
                     "token",
                     "webhook_url",
+                    "secret_key",
                 ]
             },
         ),
+    ]
+
+    readonly_fields = [
+        *BaseAdmin.readonly_fields,
+        "secret_key",
     ]
 
     list_display = [

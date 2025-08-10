@@ -1,8 +1,8 @@
 from collections.abc import Callable
+from typing import Annotated
 
 import pydantic
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing_extensions import Annotated
 
 
 def convert_string_to_list(v: str | list) -> Callable[..., list[str]]:
@@ -14,7 +14,8 @@ def convert_string_to_list(v: str | list) -> Callable[..., list[str]]:
 
 
 StringListValidator = Annotated[
-    list[str] | str, pydantic.BeforeValidator(convert_string_to_list)
+    list[str] | str,
+    pydantic.BeforeValidator(convert_string_to_list),
 ]
 
 
@@ -28,6 +29,8 @@ class Config(BaseSettings):
 
     TIMEZONE: str = "UTC"
     LANGUAGE_CODE: str = "en-us"
+
+    SCHEDULE_URL: pydantic.HttpUrl = "http://docker.host:8000/api/schedule"
 
     model_config = SettingsConfigDict(
         env_file=(

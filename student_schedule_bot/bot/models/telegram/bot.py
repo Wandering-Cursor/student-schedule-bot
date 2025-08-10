@@ -57,3 +57,7 @@ class Bot(BaseModel):
             self.secret_key = self.generate_secret_key()
 
         return self.secret_key
+
+    def clean(self) -> None:
+        self.clean_secret_key()
+        return super().clean()

@@ -70,10 +70,10 @@ class RequestSender:
         self: "RequestSender",
         service_name: str | Callable[..., str] = "Undefined",
         base_url: str | None = None,
-        timeout: Timeout = Timeout(timeout=30.0),
+        timeout: Timeout = Timeout(timeout=30.0),  # noqa: B008
         verify: bool = True,
         client_kwargs: dict[str, Any] | None = None,
-    ):
+    ) -> None:
         if callable(service_name):
             service_name = service_name()
         self.service_name = service_name
@@ -172,9 +172,8 @@ class RequestSender:
         if additional_args is None:
             additional_args = {}
 
-        if client := cls.__client_storage.get(service_name, None):
-            if not client.is_closed:
-                return client
+        if (client := cls.__client_storage.get(service_name, None)) and not client.is_closed:
+            return client
 
         cls.__client_storage[service_name] = httpx.Client(
             headers=cls._make_headers(
@@ -199,9 +198,8 @@ class RequestSender:
         if additional_args is None:
             additional_args = {}
 
-        if client := cls.__async_client_storage.get(service_name, None):
-            if not client.is_closed:
-                return client
+        if (client := cls.__async_client_storage.get(service_name, None)) and not client.is_closed:
+            return client
 
         cls.__async_client_storage[service_name] = httpx.AsyncClient(
             headers=cls._make_headers(
