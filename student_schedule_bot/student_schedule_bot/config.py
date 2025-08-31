@@ -22,6 +22,7 @@ StringListValidator = Annotated[
 class Config(BaseSettings):
     DEBUG: bool = False
     SECRET_KEY: str = "SecretToken-YUot2-hEjkK1uV3sjUZ3Pg"
+    ADMIN_CHAT_ID: str | None = None
     ALLOWED_HOSTS: StringListValidator = ["*"]
     TRUSTED_HOSTS: StringListValidator = ["*"]
 

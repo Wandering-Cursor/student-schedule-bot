@@ -1,3 +1,4 @@
+import urllib.parse
 import uuid
 from typing import TYPE_CHECKING
 
@@ -6,6 +7,7 @@ from bot.models.user import User
 from bot.operations.schedule.read import get_schedule
 from bot.operations.telegram import messages
 from bot.operations.telegram.decorators import handler_decorator
+from bot.schemas.schedule.schedule import ScheduleFilters
 from student_schedule_bot.logger import main_logger
 
 if TYPE_CHECKING:
@@ -96,6 +98,22 @@ async def start(
     )
 
 
+def get_schedule_filters_from_query(callback_query: str) -> ScheduleFilters:
+    filters = ScheduleFilters(page=1)
+
+    pieces = callback_query.split("?")
+
+    if len(pieces) == 1:
+        return filters
+
+    result = urllib.parse.parse_qs(qs="".join(pieces[1:]))
+
+    if "page" in result:
+        filters.page = int(result["page"][0])
+
+    return filters
+
+
 @handler_decorator()
 async def show_schedule(
     update: "Update",
@@ -103,12 +121,52 @@ async def show_schedule(
 ) -> None:
     user = await get_user(update)
 
+    filters = None
+
+    if update.callback_query:
+        filters = get_schedule_filters_from_query(update.callback_query.data)
+
     schedule = await get_schedule(
         user=user,
+        filters=filters,
     )
 
     await messages.show_schedule(
         update=update,
         user=user,
         schedule=schedule,
+    )
+
+
+@handler_decorator()
+async def show_item(
+    update: "Update",
+    _context: "ContextTypes.DEFAULT_TYPE",
+) -> None:
+    pass
+
+
+@handler_decorator()
+async def error_handler(
+    update: "Update",
+    context: "ContextTypes.DEFAULT_TYPE",
+) -> None:
+    await messages.user_error_handler(
+        update=update,
+        error=context.error,
+    )
+    await messages.admin_error_handler(
+        bot=context.bot,
+        update=update,
+        error=context.error,
+    )
+
+    main_logger.error(
+        {
+            "msg": "An unexpected exception arose!",
+            "update": update,
+            "context": context,
+            "context.error": context.error,
+        },
+        exc_info=context.error,
     )
