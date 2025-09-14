@@ -24,6 +24,17 @@ class Schedule(NavigatableObject, WithTimestamps):
 
     photo_schedule: pydantic.HttpUrl | None = None
 
+    @property
+    def photo_schedule_id(self) -> pydantic.UUID4 | None:
+        if not self.photo_schedule:
+            return None
+
+        match = re.search(r"/([\da-f]{8}-([\da-f]{4}-){3}[\da-f]{12})/", str(self.photo_schedule))
+        if match is not None:
+            return pydantic.UUID4(match.group(1))  # pyright: ignore[reportCallIssue]
+
+        return None
+
 
 class ScheduleResponse(Schema):
     count: int
@@ -53,3 +64,15 @@ class ScheduleResponse(Schema):
             return None
 
         return self.get_page_from_url(self.previous) or 1
+
+
+class PhotoItem(WithTimestamps):
+    uuid: pydantic.UUID4
+
+    file: pydantic.HttpUrl
+
+
+class PhotoSchedule(NavigatableObject, WithTimestamps):
+    photos: list[PhotoItem]
+
+    name: str | None = None

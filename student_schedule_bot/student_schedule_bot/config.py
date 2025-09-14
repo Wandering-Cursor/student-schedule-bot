@@ -24,7 +24,7 @@ class Config(BaseSettings):
     SECRET_KEY: str = "SecretToken-YUot2-hEjkK1uV3sjUZ3Pg"
     ADMIN_CHAT_ID: str | None = None
     ALLOWED_HOSTS: StringListValidator = ["*"]
-    TRUSTED_HOSTS: StringListValidator = ["*"]
+    TRUSTED_HOSTS: StringListValidator = ["http://localhost", "https://localhost"]
 
     DATABASE_CONNECTION: pydantic.AnyUrl = "sqlite:///db.sqlite3"
 

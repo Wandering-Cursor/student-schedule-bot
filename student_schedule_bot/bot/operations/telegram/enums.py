@@ -14,6 +14,8 @@ class Commands(StrEnum):
 
     SHOW_ITEM = "show_item?id="
 
+    SHOW_PHOTO_SCHEDULE = "show_photo_schedule?id="
+
     @property
     def as_command(self) -> str:
         return self.value.replace("/", "")
@@ -24,7 +26,7 @@ class Commands(StrEnum):
 
         if self == Commands.SCHEDULE_PAGE:
             pattern = pattern.replace("page=", r"page=\d")
-        if self == Commands.SHOW_ITEM:
+        if self in [Commands.SHOW_ITEM, Commands.SHOW_PHOTO_SCHEDULE]:
             pattern = pattern.replace("id=", r"id=.*")
 
         return f"^{pattern}$"
@@ -36,3 +38,10 @@ class Commands(StrEnum):
     @classmethod
     def show_item(cls, item_id: str) -> str:
         return f"{cls.SHOW_ITEM.value}{item_id}"
+
+    @classmethod
+    def show_photo_schedule(cls, photo_id: str, item_id: str | None) -> str:
+        if not item_id:
+            return f"{cls.SHOW_PHOTO_SCHEDULE.value}{photo_id}"
+
+        return f"{cls.SHOW_PHOTO_SCHEDULE.value}{photo_id}?item_id={item_id}"

@@ -1,4 +1,3 @@
-from functools import lru_cache
 from typing import TYPE_CHECKING
 
 from telegram import Update
@@ -6,20 +5,25 @@ from telegram.ext import (
     Application,
     CallbackQueryHandler,
     CommandHandler,
-    ConversationHandler,
-    MessageHandler,
-    filters,
+    InvalidCallbackData,
+    PicklePersistence,
 )
 
 from bot.operations.telegram import handlers
-from bot.operations.telegram.enums import ApplicationStates, Commands
+from bot.operations.telegram.enums import Commands
 
 if TYPE_CHECKING:
     from bot.models.telegram.bot import Bot as BotModel
 
 
 async def get_bot(bot_instance: "BotModel") -> "Application":
-    application = Application.builder().token(bot_instance.token).build()
+    application = (
+        Application.builder()
+        .token(bot_instance.token)
+        .persistence(PicklePersistence(filepath=f"bot_data_{bot_instance.pk}.pkl"))
+        .arbitrary_callback_data(arbitrary_callback_data=True)
+        .build()
+    )
 
     application.add_handler(
         CommandHandler(
@@ -32,6 +36,13 @@ async def get_bot(bot_instance: "BotModel") -> "Application":
         CommandHandler(
             "clear_keyboard",
             handlers.clear_keyboards,
+        )
+    )
+
+    application.add_handler(
+        CallbackQueryHandler(
+            handlers.error_handler,
+            pattern=InvalidCallbackData,
         )
     )
 
@@ -60,6 +71,13 @@ async def get_bot(bot_instance: "BotModel") -> "Application":
         CallbackQueryHandler(
             handlers.show_item,
             pattern=Commands.SHOW_ITEM.as_regex,
+        )
+    )
+
+    application.add_handler(
+        CallbackQueryHandler(
+            handlers.show_photo_schedule,
+            pattern=Commands.SHOW_PHOTO_SCHEDULE.as_regex,
         )
     )
 
@@ -139,6 +157,8 @@ async def process_webhook_with_bot(bot_instance: "BotModel", update_data: dict) 
     application = await get_bot(bot_instance)
 
     update = Update.de_json(update_data, bot=application.bot)
+
+    application.bot.insert_callback_data(update)
 
     await application.process_update(update)
 

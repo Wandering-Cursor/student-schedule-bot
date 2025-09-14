@@ -64,7 +64,6 @@ class RequestSender:
     """
 
     __client_storage: dict[str, httpx.Client] = {}
-    __async_client_storage: dict[str, httpx.AsyncClient] = {}
 
     def __init__(
         self: "RequestSender",
@@ -203,15 +202,10 @@ class RequestSender:
         if additional_args is None:
             additional_args = {}
 
-        if (client := cls.__async_client_storage.get(service_name, None)) and not client.is_closed:
-            return client
-
-        cls.__async_client_storage[service_name] = httpx.AsyncClient(
+        return httpx.AsyncClient(
             headers=cls._make_headers(
                 service_name=service_name,
                 request_method="async",
             ),
             **additional_args,
         )
-
-        return cls.__async_client_storage[service_name]

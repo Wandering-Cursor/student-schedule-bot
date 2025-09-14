@@ -2,16 +2,18 @@ import urllib.parse
 import uuid
 from typing import TYPE_CHECKING
 
+import pydantic
+from student_schedule_bot.logger import main_logger
+from telegram import Update
+
 from bot.models.telegram.chat import TelegramChat
 from bot.models.user import User
-from bot.operations.schedule.read import get_schedule
+from bot.operations.schedule.read import get_photo_schedule, get_schedule, get_schedule_item
 from bot.operations.telegram import messages
 from bot.operations.telegram.decorators import handler_decorator
 from bot.schemas.schedule.schedule import ScheduleFilters
-from student_schedule_bot.logger import main_logger
 
 if TYPE_CHECKING:
-    from telegram import Update
     from telegram.ext import ContextTypes
 
 
@@ -35,7 +37,9 @@ async def get_or_create_chat(
         raise ValueError("Update does not contain an effective chat.")
 
     if get_only:
-        chat = await TelegramChat.objects.afirst(chat_id=effective_chat.id)
+        chat = await TelegramChat.objects.filter(
+            chat_id=effective_chat.id,
+        ).afirst()
 
         if not chat:
             raise ValueError("Chat not found.")
@@ -124,7 +128,7 @@ async def show_schedule(
     filters = None
 
     if update.callback_query:
-        filters = get_schedule_filters_from_query(update.callback_query.data)
+        filters = get_schedule_filters_from_query(update.callback_query.data or "")
 
     schedule = await get_schedule(
         user=user,
@@ -138,19 +142,100 @@ async def show_schedule(
     )
 
 
+def get_item_id_from_query(callback_query: str) -> pydantic.UUID4 | None:
+    pieces = callback_query.split("?")
+
+    if len(pieces) == 1:
+        return None
+
+    result = urllib.parse.parse_qs(qs="".join(pieces[1:]))
+
+    if "id" in result:
+        return pydantic.UUID4(result["id"][0])  # pyright: ignore[reportCallIssue]
+
+    return None
+
+
 @handler_decorator()
 async def show_item(
     update: "Update",
     _context: "ContextTypes.DEFAULT_TYPE",
 ) -> None:
-    pass
+    # Consider getting user to filter Group schedules by User's group
+    if not update.callback_query:
+        raise ValueError("Update does not contain a callback query.")
+
+    item_id = get_item_id_from_query(update.callback_query.data or "")
+
+    if not item_id:
+        raise ValueError("Item ID not found in callback query.")
+
+    item = await get_schedule_item(
+        item_id=item_id,
+    )
+
+    await messages.show_item(
+        update=update,
+        schedule_item=item,
+    )
+
+
+def get_photo_schedule_info_from_query(
+    callback_query: str,
+) -> tuple[pydantic.UUID4 | None, pydantic.UUID4 | None]:
+    pieces = callback_query.split("?")
+
+    if len(pieces) == 1:
+        return None, None
+
+    result = urllib.parse.parse_qs(qs="&".join(pieces[1:]))
+
+    photo_id = None
+    item_id = None
+
+    if "id" in result:
+        photo_id = pydantic.UUID4(result["id"][0])  # pyright: ignore[reportCallIssue]
+
+    if "item_id" in result:
+        item_id = pydantic.UUID4(result["item_id"][0])  # pyright: ignore[reportCallIssue]
+
+    return photo_id, item_id
+
+
+@handler_decorator()
+async def show_photo_schedule(
+    update: "Update",
+    _context: "ContextTypes.DEFAULT_TYPE",
+) -> None:
+    if not update.callback_query:
+        raise ValueError("Update does not contain a callback query.")
+
+    photo_id, item_id = get_photo_schedule_info_from_query(update.callback_query.data or "")
+
+    if not photo_id:
+        raise ValueError("Photo Schedule ID not found in callback query.")
+
+    photo_schedule = await get_photo_schedule(
+        photo_schedule_id=photo_id,
+    )
+
+    await messages.show_photo_schedule(
+        update=update,
+        photo_schedule=photo_schedule,
+        item_id=str(item_id) if item_id else None,
+    )
 
 
 @handler_decorator()
 async def error_handler(
-    update: "Update",
+    update: "object",
     context: "ContextTypes.DEFAULT_TYPE",
 ) -> None:
+    assert isinstance(update, Update)
+
+    if not context.error:
+        context.error = Exception("Unknown error")
+
     await messages.user_error_handler(
         update=update,
         error=context.error,
