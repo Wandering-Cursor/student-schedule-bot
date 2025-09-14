@@ -1,0 +1,42 @@
+name: "student-schedule-bot"
+
+services:
+  bot:
+    image: ghcr.io/wandering-cursor/student-schedule-bot:latest
+    secrets:
+      - env_file
+    depends_on:
+      database:
+        condition: service_healthy
+        restart: true
+
+  database:
+    image: postgres:17
+    environment:
+      POSTGRES_DB_FILE: /run/secrets/POSTGRES_DB
+      POSTGRES_USER_FILE: /run/secrets/POSTGRES_USER
+      POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD
+    volumes:
+      - databaseData:/var/lib/postgresql/data
+    secrets:
+      - POSTGRES_DB
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  
+volumes:
+  databaseData:
+
+secrets:
+  POSTGRES_DB:
+    file: POSTGRES_DB
+  POSTGRES_USER:
+    file: POSTGRES_USER
+  POSTGRES_PASSWORD:
+    file: POSTGRES_PASSWORD
+  env_file:
+    file: .env

@@ -1,0 +1,43 @@
+name: "student-schedule-bot"
+
+services:
+  bot:
+    image: student-schedule-bot
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+    volumes:
+      - backendData:/app
+    command: /bin/sh -c "while sleep 1000; do :; done"
+    depends_on:
+      database:
+        condition: service_healthy
+        restart: true
+    networks:
+      - default
+
+  database:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: DevDB
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - databaseData:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  
+  pgAdmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: mail@mail.com
+      PGADMIN_DEFAULT_PASSWORD: password
+    ports:
+      - ":80"
+
+volumes:
+  backendData:
+  databaseData:
