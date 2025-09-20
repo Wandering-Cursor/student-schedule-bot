@@ -8,12 +8,13 @@ from bot.operations.telegram.enums import Commands
 
 if TYPE_CHECKING:
     from telegram import Update
+    from telegram.ext import ContextTypes
 
     from bot.models.user import User
     from bot.schemas.schedule.schedule import PhotoSchedule, Schedule, ScheduleResponse
 
 
-async def clear_keyboards(
+async def clear_reply_keyboard(
     message: str,
     update: "Update",
 ) -> None:
@@ -29,13 +30,26 @@ async def reply_or_edit(
     update: "Update",
     text: str,
     markup: "InlineKeyboardMarkup | None" = None,
+    context: "ContextTypes.DEFAULT_TYPE | None" = None,
 ) -> None:
     assert update.effective_message is not None
-    assert update.effective_message.from_user is not None
 
-    if update.effective_message.from_user.is_bot:
-        if update.effective_message.text:
-            await update.effective_message.edit_text(
+    effective_message = update.effective_message
+
+    assert effective_message.from_user is not None
+
+    if effective_message.from_user.is_bot:
+        reply_to = effective_message.reply_to_message
+        if reply_to and reply_to.media_group_id:
+            media_group_id = reply_to.media_group_id
+            if context and context.chat_data:
+                group_messages = context.chat_data.get("media_groups", {}).get(media_group_id, [])
+                await update.get_bot().delete_messages(
+                    chat_id=effective_message.chat_id,
+                    message_ids=group_messages,
+                )
+        if effective_message.text:
+            await effective_message.edit_text(
                 text,
                 reply_markup=markup,
             )
@@ -83,8 +97,9 @@ async def start(
 
 async def show_schedule(
     update: "Update",
-    user: "User",
+    user: "User",  # Consider using User entity to show group schedule  # noqa: ARG001
     schedule: "ScheduleResponse",
+    context: "ContextTypes.DEFAULT_TYPE | None" = None,
 ) -> None:
     keyboard = []
 
@@ -135,12 +150,14 @@ async def show_schedule(
         update,
         text=f"Розклад ({schedule.count}):",
         markup=markup,
+        context=context,
     )
 
 
 async def show_item(
     update: "Update",
     schedule_item: "Schedule",
+    context: "ContextTypes.DEFAULT_TYPE | None" = None,
 ) -> None:
     # NOTE: Not handling group schedules yet
     group_schedule = "❌" if not schedule_item.group_schedules else "✅"
@@ -178,6 +195,7 @@ async def show_item(
         update=update,
         text=text,
         markup=InlineKeyboardMarkup(keyboard),
+        context=context,
     )
 
 
@@ -185,6 +203,7 @@ async def show_photo_schedule(
     update: "Update",
     photo_schedule: "PhotoSchedule",
     item_id: str | None = None,
+    context: "ContextTypes.DEFAULT_TYPE | None" = None,
 ) -> None:
     keyboard = []
 
@@ -225,9 +244,14 @@ async def show_photo_schedule(
         await first.reply_text(
             "Використовуйте кнопки для навігації",
             reply_markup=InlineKeyboardMarkup(keyboard),
+            reply_to_message_id=first.message_id,
         )
 
-    # Think about removing media groups for >1 images
+    # For removing >1 message
+    if context and context.chat_data is not None:
+        media_groups = context.chat_data.get("media_groups", {})
+        media_groups[first.media_group_id] = [msg.message_id for msg in messages]
+        context.chat_data["media_groups"] = media_groups
 
     await update.effective_message.delete()
 

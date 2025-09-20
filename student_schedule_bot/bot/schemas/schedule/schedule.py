@@ -13,7 +13,7 @@ class ScheduleFilters(Schema):
     for_date: datetime.datetime | None = None
 
     page: int = pydantic.Field(
-        le=1,
+        ge=1,
     )
 
 

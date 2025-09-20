@@ -22,7 +22,8 @@ async def clear_keyboards(
     _context: "ContextTypes.DEFAULT_TYPE",
 ) -> None:
     # TODO: Add Translations  # noqa: FIX002, TD002, TD003
-    await messages.clear_keyboards(
+    # Consider using lazy translations from Django
+    await messages.clear_reply_keyboard(
         message="Кнопки прибрано",
         update=update,
     )
@@ -121,7 +122,7 @@ def get_schedule_filters_from_query(callback_query: str) -> ScheduleFilters:
 @handler_decorator()
 async def show_schedule(
     update: "Update",
-    _context: "ContextTypes.DEFAULT_TYPE",
+    context: "ContextTypes.DEFAULT_TYPE",
 ) -> None:
     user = await get_user(update)
 
@@ -139,6 +140,7 @@ async def show_schedule(
         update=update,
         user=user,
         schedule=schedule,
+        context=context,
     )
 
 
@@ -159,7 +161,7 @@ def get_item_id_from_query(callback_query: str) -> pydantic.UUID4 | None:
 @handler_decorator()
 async def show_item(
     update: "Update",
-    _context: "ContextTypes.DEFAULT_TYPE",
+    context: "ContextTypes.DEFAULT_TYPE",
 ) -> None:
     # Consider getting user to filter Group schedules by User's group
     if not update.callback_query:
@@ -177,6 +179,7 @@ async def show_item(
     await messages.show_item(
         update=update,
         schedule_item=item,
+        context=context,
     )
 
 
@@ -205,7 +208,7 @@ def get_photo_schedule_info_from_query(
 @handler_decorator()
 async def show_photo_schedule(
     update: "Update",
-    _context: "ContextTypes.DEFAULT_TYPE",
+    context: "ContextTypes.DEFAULT_TYPE",
 ) -> None:
     if not update.callback_query:
         raise ValueError("Update does not contain a callback query.")
@@ -223,6 +226,7 @@ async def show_photo_schedule(
         update=update,
         photo_schedule=photo_schedule,
         item_id=str(item_id) if item_id else None,
+        context=context,
     )
 
 
