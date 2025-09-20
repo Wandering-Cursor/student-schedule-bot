@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import json
 import logging
 from pathlib import Path
 
@@ -121,8 +122,6 @@ CACHES = {
 
 def message_to_json(message: dict) -> str:
     """Convert a message dictionary to a JSON string."""
-    import json  # noqa: PLC0415
-
     return json.dumps(
         message,
         ensure_ascii=False,

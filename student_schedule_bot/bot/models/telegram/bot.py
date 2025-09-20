@@ -44,7 +44,7 @@ class Bot(BaseModel):
         return f"Bot: {self.name}"
 
     def __repr__(self) -> str:
-        return f'Bot(name="{self.name}", token="***", secret_key"***", webhook_url="{self.webhook_url}")'
+        return f'Bot(name="{self.name}", token="***", secret_key="***", webhook_url="{self.webhook_url}")'
 
     def generate_secret_key(self) -> str:
         """Generates a new secret key for the bot."""

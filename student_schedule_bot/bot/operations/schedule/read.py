@@ -65,8 +65,23 @@ async def get_schedule(
 
 async def get_schedule_using_url(
     url: str,
-) -> None:
-    pass
+) -> ScheduleResponse:
+    response = await sender.send_async(
+        "GET",
+        url,
+    )
+
+    if response.status_code != OK_200:
+        raise RuntimeError(
+            {
+                "msg": "Failed to get schedule using url",
+                "response": response,
+                "response.content": response.content,
+                "response.request.url": response.request.url,
+            }
+        )
+
+    return ScheduleResponse.model_validate(response.json())
 
 
 async def get_schedule_item(
